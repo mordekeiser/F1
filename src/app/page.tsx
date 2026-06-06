@@ -3,6 +3,7 @@ import Hero from "@/components/Hero";
 import DriverStandings from "@/components/DriverStandings";
 import ConstructorStandings from "@/components/ConstructorStandings";
 import TeamsShowcase from "@/components/TeamsShowcase";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
       <DriverStandings />
       <ConstructorStandings />
       <TeamsShowcase />
+      <SpeedInsights />
     </>
   );
 }
