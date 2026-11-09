@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { motion, useInView } from "framer-motion";
 import { useLayoutEffect, useEffect, useRef, useState } from "react";
 import { flagUrl, initials, type Driver } from "@/lib/f1";
@@ -34,9 +35,11 @@ export function SectionHeader({ kicker, title, accent, sub, right }: { kicker: s
   return (
     <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
       <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-80px" }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}>
-        <div className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--f1-red)]">
-          <span className="h-px w-8 bg-[var(--f1-red)]" />{kicker}
-        </div>
+        <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-2 text-xs font-semibold text-zinc-500">
+          <Link href="/" className="transition-colors hover:text-white">Dashboard</Link>
+          <span className="text-zinc-700">/</span>
+          <span className="text-zinc-300">{kicker}</span>
+        </nav>
         <h2 className="text-4xl font-black tracking-tight text-white sm:text-5xl">{title} <span className="text-gradient">{accent}</span></h2>
         {sub && <div className="mt-2 text-sm text-zinc-500">{sub}</div>}
       </motion.div>

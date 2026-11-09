@@ -24,10 +24,10 @@ export default function Standings() {
   const leaderPts = Number(data.drivers[0]?.points ?? 0);
 
   return (
-    <section id="standings" className="relative py-24">
+    <section id="standings" className="relative pb-24 pt-24">
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-[var(--f1-red)]/[0.03] to-transparent" />
       <div className="relative mx-auto max-w-5xl px-5">
-        <SectionHeader kicker="Championship" title="World" accent="Standings"
+        <SectionHeader kicker="Standings" title="World" accent="Standings"
           sub={<>Updates automatically after every session · positions animate when they change</>}
           right={
             <div className="flex rounded-full border border-white/10 bg-white/[0.03] p-1 text-sm font-bold">

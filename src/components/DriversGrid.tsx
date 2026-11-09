@@ -40,9 +40,9 @@ export default function DriversGrid() {
   const colorOf = (s: DriverStanding) => data.media[s.Driver.driverId]?.color ?? teamMeta(s.Constructors[0]).color;
 
   return (
-    <section id="drivers" className="relative py-24">
+    <section id="drivers" className="relative pb-24 pt-24">
       <div className="mx-auto max-w-7xl px-5">
-        <SectionHeader kicker="The grid" title={data.season} accent="Drivers" sub="Tap a driver for their profile · line-ups follow the live standings" />
+        <SectionHeader kicker="Drivers" title={data.season} accent="Drivers" sub="Tap a driver for their profile · line-ups follow the live standings" />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {drivers.map((s, i) => {
             const color = colorOf(s);

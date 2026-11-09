@@ -7,9 +7,9 @@ import { Avatar, SectionHeader } from "./ui";
 export default function TeamsShowcase() {
   const { data } = useLive();
   return (
-    <section id="teams" className="relative py-24">
+    <section id="teams" className="relative pb-24 pt-24">
       <div className="mx-auto max-w-7xl px-5">
-        <SectionHeader kicker="Constructors" title={data.season} accent="Teams" sub={`${data.constructors.length} teams · ordered by championship position`} />
+        <SectionHeader kicker="Teams" title={data.season} accent="Teams" sub={`${data.constructors.length} teams · ordered by championship position`} />
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {data.constructors.map((c, i) => {
             const team = teamMeta(c.Constructor);

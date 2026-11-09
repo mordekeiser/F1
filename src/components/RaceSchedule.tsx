@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { countryIso, raceDate, raceStatus, teamMeta, weekendSessions, type RaceStatus } from "@/lib/f1";
 import { useLive } from "./LiveData";
 import { Flag, SectionHeader, Track, TrackPlaceholder } from "./ui";
@@ -16,20 +16,12 @@ const BADGE: Record<RaceStatus, { text: string; cls: string }> = {
 export default function RaceSchedule() {
   const { data, tracks, now, selectRound, fmt } = useLive();
   const [filter, setFilter] = useState<"all" | "upcoming" | "done">("all");
-  const scrolled = useRef(false);
-  const scroller = useRef<HTMLDivElement>(null);
   const races = data.schedule.map(r => ({ r, status: raceStatus(r, data.schedule, now) }));
   const shown = races.filter(({ status }) => filter === "all" || (filter === "done" ? status === "done" : status !== "done"));
 
-  // On first load, scroll the calendar so the next race is in view.
-  useEffect(() => {
-    if (scrolled.current || !scroller.current) return;
-    const el = scroller.current.querySelector<HTMLElement>("[data-current='true']");
-    if (el) { scroller.current.scrollLeft = el.offsetLeft - 16; scrolled.current = true; }
-  });
 
   return (
-    <section id="schedule" className="relative py-24">
+    <section id="schedule" className="relative pb-24 pt-24">
       <div className="mx-auto max-w-7xl px-5">
         <SectionHeader kicker="Calendar" title="Race" accent="Calendar"
           sub={<span suppressHydrationWarning>{data.season} season · {data.schedule.length} rounds · statuses update automatically</span>}
@@ -44,7 +36,7 @@ export default function RaceSchedule() {
             </div>
           } />
 
-        <div ref={scroller} className="no-scrollbar relative -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {shown.map(({ r, status }, i) => {
             const winner = data.winners[r.round];
             const d = tracks[r.Circuit.circuitId];
@@ -52,9 +44,9 @@ export default function RaceSchedule() {
             const highlight = status === "live" || status === "weekend" || status === "next";
             return (
               <motion.button key={r.round} data-current={highlight} onClick={() => selectRound(r.round)}
-                initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: Math.min(i, 6) * 0.05 }}
+                initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (i % 4) * 0.05 }}
                 whileHover={{ y: -6 }}
-                className={`card card-hover group relative w-[260px] shrink-0 snap-start overflow-hidden p-5 text-left ${highlight ? "!border-[var(--f1-red)]/50 shadow-[0_0_40px_-10px_rgba(225,6,0,0.5)]" : ""} ${status === "done" ? "opacity-80 hover:opacity-100" : ""}`}>
+                className={`card card-hover group relative overflow-hidden p-5 text-left ${highlight ? "!border-[var(--f1-red)]/50 shadow-[0_0_40px_-10px_rgba(225,6,0,0.5)]" : ""} ${status === "done" ? "opacity-80 hover:opacity-100" : ""}`}>
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-500">Round {r.round}</div>

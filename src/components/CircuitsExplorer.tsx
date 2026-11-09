@@ -50,7 +50,7 @@ export default function CircuitsExplorer() {
   ] : [];
 
   return (
-    <section id="circuits" className="relative overflow-hidden py-24">
+    <section id="circuits" className="relative overflow-hidden pb-24 pt-24">
       <div className="bg-grid absolute inset-0 opacity-60" />
       <div className="relative mx-auto max-w-7xl px-5">
         <SectionHeader kicker="Circuits" title="Track" accent="Explorer" sub="Real layouts · animated lap · sector split · use ← → keys" />

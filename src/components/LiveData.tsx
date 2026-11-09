@@ -1,6 +1,7 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { MotionConfig } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { liveSession, nextRace, type Snapshot } from "@/lib/f1";
 
 interface LiveCtx {
@@ -12,7 +13,7 @@ interface LiveCtx {
   /** Points gained per driverId / constructorId since the previous poll (for "+X" flashes). */
   deltas: Record<string, number>;
   selectedRound: string | null;
-  selectRound: (round: string, scroll?: boolean) => void;
+  selectRound: (round: string, open?: boolean) => void;
   refresh: () => void;
   /** Locale date formatting that is stable during hydration (UTC/en-GB on the server and first paint, then the viewer's own locale & timezone). */
   fmt: (d: Date, opts: Intl.DateTimeFormatOptions) => string;
@@ -75,10 +76,11 @@ export default function LiveDataProvider({ initial, tracks, children }: { initia
   // Default the circuit explorer to the next race (or the last one once the season ends).
   const defaultRound = nextRace(data.schedule, now)?.round ?? data.schedule.at(-1)?.round ?? null;
 
-  const selectRound = useCallback((round: string, scroll = true) => {
+  const router = useRouter();
+  const selectRound = useCallback((round: string, open = true) => {
     setSelectedRound(round);
-    if (scroll) document.getElementById("circuits")?.scrollIntoView({ behavior: "smooth" });
-  }, []);
+    if (open) router.push("/circuits");
+  }, [router]);
 
   const fmt = useCallback((d: Date, opts: Intl.DateTimeFormatOptions) =>
     hydrated ? d.toLocaleString([], opts) : d.toLocaleString("en-GB", { ...opts, timeZone: "UTC" }), [hydrated]);

@@ -20,9 +20,9 @@ export default function LastRaceResults() {
   const gained = [...results].filter(r => r.grid && r.grid !== "0").sort((a, b) => (Number(b.grid) - Number(b.position)) - (Number(a.grid) - Number(a.position)))[0];
 
   return (
-    <section id="results" className="relative py-24">
+    <section id="results" className="relative pb-24 pt-24">
       <div className="mx-auto max-w-5xl px-5">
-        <SectionHeader kicker="Latest result" title="Last" accent="Race"
+        <SectionHeader kicker="Results" title="Last" accent="Race"
           sub={<span className="inline-flex items-center gap-2"><Flag iso={countryIso(race.Circuit.Location.country)} className="h-3.5 w-5" />Round {race.round} · {race.raceName} · {fmt(new Date(race.date), { day: "numeric", month: "long", year: "numeric" })}</span>} />
 
         <div className="mb-10 grid grid-cols-3 items-end gap-3 sm:gap-6">
