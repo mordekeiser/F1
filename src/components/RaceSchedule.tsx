@@ -1,47 +1,93 @@
 "use client";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import { type Race } from "@/lib/f1api";
+import { useEffect, useRef, useState } from "react";
+import { countryIso, raceDate, raceStatus, teamMeta, weekendSessions, type RaceStatus } from "@/lib/f1";
+import { useLive } from "./LiveData";
+import { Flag, SectionHeader, Track, TrackPlaceholder } from "./ui";
 
-const FLAG: Record<string,string> = {
-  Australia:"🇦🇺",China:"🇨🇳",Japan:"🇯🇵",Bahrain:"🇧🇭","Saudi Arabia":"🇸🇦","United States":"🇺🇸",
-  Canada:"🇨🇦",Monaco:"🇲🇨",Spain:"🇪🇸",Austria:"🇦🇹","Great Britain":"🇬🇧",Belgium:"🇧🇪",
-  Hungary:"🇭🇺",Netherlands:"🇳🇱",Italy:"🇮🇹",Azerbaijan:"🇦🇿",Singapore:"🇸🇬",Mexico:"🇲🇽",
-  Brazil:"🇧🇷","Abu Dhabi":"🇦🇪",Qatar:"🇶🇦",
+const BADGE: Record<RaceStatus, { text: string; cls: string }> = {
+  live:     { text: "LIVE",     cls: "bg-[var(--f1-red)] text-white" },
+  weekend:  { text: "THIS WEEKEND", cls: "bg-amber-400 text-black" },
+  next:     { text: "NEXT",     cls: "bg-amber-400/15 text-amber-300 ring-1 ring-amber-400/40" },
+  done:     { text: "FINISHED", cls: "bg-white/5 text-zinc-500" },
+  upcoming: { text: "UPCOMING", cls: "bg-white/5 text-zinc-400" },
 };
 
-export default function RaceSchedule({ initial }: { initial: Race[] }) {
-  const [races,setRaces]=useState(initial);
-  useEffect(()=>{
-    const refresh=async()=>{try{const res=await fetch("/api/f1?type=schedule");const data=await res.json();const r=data.MRData?.RaceTable?.Races;if(r?.length)setRaces(r);}catch{}};
-    const id=setInterval(refresh,3_600_000);return()=>clearInterval(id);
-  },[]);
-  const now=new Date();
-  const getStatus=(race:Race)=>{
-    const rt=new Date(`${race.date}T${race.time??"14:00:00Z"}`);
-    const diff=rt.getTime()-now.getTime();
-    if(diff<-7200000)return"done";if(diff<7200000)return"live";if(diff<86400000*7)return"next";return"upcoming";
-  };
+export default function RaceSchedule() {
+  const { data, tracks, now, selectRound, fmt } = useLive();
+  const [filter, setFilter] = useState<"all" | "upcoming" | "done">("all");
+  const scrolled = useRef(false);
+  const scroller = useRef<HTMLDivElement>(null);
+  const races = data.schedule.map(r => ({ r, status: raceStatus(r, data.schedule, now) }));
+  const shown = races.filter(({ status }) => filter === "all" || (filter === "done" ? status === "done" : status !== "done"));
+
+  // On first load, scroll the calendar so the next race is in view.
+  useEffect(() => {
+    if (scrolled.current || !scroller.current) return;
+    const el = scroller.current.querySelector<HTMLElement>("[data-current='true']");
+    if (el) { scroller.current.scrollLeft = el.offsetLeft - 16; scrolled.current = true; }
+  });
+
   return (
-    <section id="schedule" className="bg-[#0a0a0a] py-24">
-      <div className="max-w-4xl mx-auto px-6">
-        <div className="mb-10"><h2 className="text-4xl font-black text-white">Race <span className="text-[#e10600]">Calendar</span></h2><p className="text-zinc-500 text-sm mt-1">2026 Formula 1 World Championship · {races.length} rounds</p></div>
-        <div className="space-y-2">
-          {races.map((race,i)=>{
-            const status=getStatus(race);const flag=FLAG[race.Circuit.Location.country]??"🏁";
-            const raceDate=new Date(`${race.date}T${race.time??"14:00:00Z"}`);
-            const isLive=status==="live";const isDone=status==="done";const isNext=status==="next";
+    <section id="schedule" className="relative py-24">
+      <div className="mx-auto max-w-7xl px-5">
+        <SectionHeader kicker="Calendar" title="Race" accent="Calendar"
+          sub={<span suppressHydrationWarning>{data.season} season · {data.schedule.length} rounds · statuses update automatically</span>}
+          right={
+            <div className="flex rounded-full border border-white/10 bg-white/[0.03] p-1 text-xs font-bold">
+              {(["all", "upcoming", "done"] as const).map(f => (
+                <button key={f} onClick={() => setFilter(f)} className={`relative rounded-full px-4 py-1.5 uppercase tracking-wider ${filter === f ? "text-white" : "text-zinc-500 hover:text-zinc-300"}`}>
+                  {filter === f && <motion.span layoutId="sched-pill" className="absolute inset-0 rounded-full bg-[var(--f1-red)]" />}
+                  <span className="relative">{f === "done" ? "Results" : f}</span>
+                </button>
+              ))}
+            </div>
+          } />
+
+        <div ref={scroller} className="no-scrollbar relative -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4">
+          {shown.map(({ r, status }, i) => {
+            const winner = data.winners[r.round];
+            const d = tracks[r.Circuit.circuitId];
+            const sprint = weekendSessions(r).some(s => s.key === "Sprint");
+            const highlight = status === "live" || status === "weekend" || status === "next";
             return (
-              <motion.div key={race.round} initial={{opacity:0,x:-20}} whileInView={{opacity:1,x:0}} viewport={{once:true}} transition={{delay:i*0.02}} whileHover={!isDone?{x:6}:{}}
-                className={`flex items-center gap-4 px-5 py-4 rounded-xl border transition-all ${isLive?"border-[#e10600] bg-[#e10600]/8":isNext?"border-amber-500/40 bg-amber-500/5":isDone?"border-zinc-800/50 opacity-50":"border-zinc-800 hover:border-zinc-600"}`}>
-                <span className="text-xs text-zinc-600 font-bold w-6 text-center">{race.round}</span>
-                <span className="text-2xl flex-shrink-0">{flag}</span>
-                <div className="flex-1 min-w-0"><div className={`font-bold text-sm truncate ${isLive?"text-white":"text-zinc-200"}`}>{race.raceName}</div><div className="text-xs text-zinc-500 truncate">{race.Circuit.circuitName}</div></div>
-                <div className="text-xs text-zinc-500 hidden sm:block flex-shrink-0">{raceDate.toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</div>
-                <span className={`text-xs font-bold px-3 py-1 rounded-full flex-shrink-0 ${isLive?"bg-[#e10600] text-white live-badge":isNext?"bg-amber-500/20 text-amber-400":isDone?"bg-zinc-800 text-zinc-500":"bg-zinc-800/50 text-zinc-600"}`}>
-                  {isLive?"LIVE":isNext?"NEXT":isDone?"DONE":""}
-                </span>
-              </motion.div>
+              <motion.button key={r.round} data-current={highlight} onClick={() => selectRound(r.round)}
+                initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: Math.min(i, 6) * 0.05 }}
+                whileHover={{ y: -6 }}
+                className={`card card-hover group relative w-[260px] shrink-0 snap-start overflow-hidden p-5 text-left ${highlight ? "!border-[var(--f1-red)]/50 shadow-[0_0_40px_-10px_rgba(225,6,0,0.5)]" : ""} ${status === "done" ? "opacity-80 hover:opacity-100" : ""}`}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-500">Round {r.round}</div>
+                    <div className="mt-1 text-4xl font-black leading-none text-white/90" suppressHydrationWarning>
+                      {fmt(raceDate(r), { day: "2-digit" })}
+                      <span className="ml-1 text-sm font-bold uppercase text-zinc-500">{fmt(raceDate(r), { month: "short" })}</span>
+                    </div>
+                  </div>
+                  <span className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black tracking-wider ${BADGE[status].cls}`} suppressHydrationWarning>
+                    {status === "live" && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />}{BADGE[status].text}
+                  </span>
+                </div>
+
+                <div className="my-4 h-28">{d ? <Track d={d} car={highlight} className="h-full w-full transition-transform duration-500 group-hover:scale-105" color={highlight ? "#e10600" : "#71717a"} /> : <TrackPlaceholder />}</div>
+
+                <div className="flex items-center gap-2">
+                  <Flag iso={countryIso(r.Circuit.Location.country)} className="h-4 w-6" />
+                  <div className="truncate font-black text-white">{r.raceName.replace(" Grand Prix", " GP")}</div>
+                  {sprint && <span className="rounded bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-violet-300">SPRINT</span>}
+                </div>
+                <div className="mt-0.5 truncate text-xs text-zinc-500">{r.Circuit.circuitName}</div>
+
+                <div className="mt-4 flex h-8 items-center border-t border-white/5 pt-3 text-xs">
+                  {winner ? (
+                    <span className="flex items-center gap-2 truncate text-zinc-400">
+                      🏆 <span className="h-3 w-0.5 rounded" style={{ background: teamMeta({ constructorId: winner.constructorId, name: winner.team }).color }} />
+                      <span className="font-bold text-white">{winner.name}</span>
+                    </span>
+                  ) : (
+                    <span className="font-semibold text-zinc-500 transition-colors group-hover:text-white">View circuit →</span>
+                  )}
+                </div>
+              </motion.button>
             );
           })}
         </div>

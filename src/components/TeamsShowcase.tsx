@@ -1,59 +1,57 @@
 "use client";
 import { motion } from "framer-motion";
-import Image from "next/image";
-import { teams } from "@/data/teams";
+import { teamMeta } from "@/lib/f1";
+import { useLive } from "./LiveData";
+import { Avatar, SectionHeader } from "./ui";
 
 export default function TeamsShowcase() {
+  const { data } = useLive();
   return (
-    <section id="teams" className="bg-[#0d0d0d] py-24">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="mb-10">
-          <h2 className="text-4xl font-black text-white">2026 <span className="text-[#e10600]">Teams</span></h2>
-          <p className="text-zinc-500 text-sm mt-1">11 constructors · including Audi & Cadillac as new entries</p>
-        </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {teams.map((team,i)=>(
-            <motion.div key={team.name}
-              initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}}
-              viewport={{once:true}} transition={{delay:i*0.06}}
-              whileHover={{scale:1.02,y:-5}}
-              className="bg-[#141414] border border-zinc-800 rounded-2xl overflow-hidden cursor-default"
-              onMouseEnter={e=>(e.currentTarget.style.boxShadow=`0 0 32px ${team.color}35`)}
-              onMouseLeave={e=>(e.currentTarget.style.boxShadow="")}>
-              <div className="h-1" style={{background:team.color}}/>
-              <div className="p-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center p-2 flex-shrink-0">
-                    <Image src={team.logo} alt={team.name} width={52} height={52} className="object-contain w-full h-full"/>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-black text-white leading-tight">{team.name}</h3>
-                    {"isNew" in team && team.isNew && (
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{background:`${team.color}25`,color:team.color}}>NEW 2026</span>
+    <section id="teams" className="relative py-24">
+      <div className="mx-auto max-w-7xl px-5">
+        <SectionHeader kicker="Constructors" title={data.season} accent="Teams" sub={`${data.constructors.length} teams · ordered by championship position`} />
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {data.constructors.map((c, i) => {
+            const team = teamMeta(c.Constructor);
+            const drivers = data.drivers.filter(d => d.Constructors[0]?.constructorId === c.Constructor.constructorId);
+            const color = (drivers[0] && data.media[drivers[0].Driver.driverId]?.color) || team.color;
+            return (
+              <motion.div key={c.Constructor.constructorId} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (i % 3) * 0.08 }}
+                whileHover={{ y: -6 }} className="card group relative overflow-hidden">
+                <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full opacity-30 blur-3xl transition-opacity duration-500 group-hover:opacity-60" style={{ background: color }} />
+                <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${color}, transparent)` }} />
+                <div className="relative p-6">
+                  <div className="flex items-center gap-4">
+                    {team.logo && (
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white p-2 shadow-lg transition-transform duration-500 group-hover:rotate-[-6deg] group-hover:scale-110">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={team.logo} alt={team.name} className="h-full w-full object-contain" />
+                      </div>
                     )}
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate text-xl font-black text-white">{team.name}</h3>
+                      <div className="text-xs text-zinc-500">P{c.position} · {c.points} pts · {c.wins} wins</div>
+                    </div>
+                    <div className="text-5xl font-black italic text-white/[0.06]">{c.position}</div>
+                  </div>
+                  <dl className="mt-5 grid grid-cols-3 gap-2 text-xs">
+                    {[{ l: "Base", v: team.base }, { l: "Principal", v: team.principal }, { l: "Power unit", v: team.engine }].map(x => (
+                      <div key={x.l} className="rounded-lg bg-white/[0.03] p-2"><dt className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">{x.l}</dt><dd className="mt-0.5 font-semibold leading-tight text-zinc-200">{x.v}</dd></div>
+                    ))}
+                  </dl>
+                  <div className="mt-4 space-y-2">
+                    {drivers.map(d => (
+                      <div key={d.Driver.driverId} className="flex items-center gap-3 rounded-xl bg-white/[0.03] p-2 pr-3">
+                        <Avatar driver={d.Driver} color={color} size={36} />
+                        <div className="min-w-0 flex-1 truncate text-sm font-bold text-white">{d.Driver.givenName} <span className="uppercase">{d.Driver.familyName}</span></div>
+                        <span className="text-xs font-bold text-zinc-400">{d.points} pts</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className="space-y-2 text-sm mb-4">
-                  {[
-                    {l:"Base",v:team.base},
-                    {l:"Principal",v:team.principal},
-                    {l:"Engine",v:team.engine},
-                  ].map(({l,v})=>(
-                    <div key={l} className="flex items-center justify-between">
-                      <span className="text-zinc-500">{l}</span>
-                      <span className="text-zinc-300 text-xs text-right">{v}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  {team.drivers.map(d=>(
-                    <span key={d} className="text-xs bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full">{d}</span>
-                  ))}
-                </div>
-                <div className="h-0.5 mt-4 rounded-full opacity-30" style={{background:team.color}}/>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>

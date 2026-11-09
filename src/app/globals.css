@@ -1,12 +1,68 @@
 @import "tailwindcss";
-:root { --f1-red:#e10600; }
-* { box-sizing:border-box; }
-body { background:#0a0a0a; color:#f0f0f0; font-family:Arial,sans-serif; overflow-x:hidden; }
-html { scroll-behavior:smooth; }
-::-webkit-scrollbar { width:6px; }
-::-webkit-scrollbar-track { background:#111; }
-::-webkit-scrollbar-thumb { background:#e10600; border-radius:3px; }
-@keyframes speedline { from{transform:translateX(-100vw)} to{transform:translateX(100vw)} }
-.speed-line { position:absolute; height:1px; width:200px; background:linear-gradient(90deg,transparent,#e10600,transparent); animation:speedline 2s linear infinite; pointer-events:none; }
-@keyframes liveblink { 0%,100%{opacity:1} 50%{opacity:.4} }
-.live-badge { animation:liveblink 1.2s ease-in-out infinite; }
+
+@theme {
+  --font-sans: var(--font-titillium), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --f1-red: #e10600;
+  --bg: #08080a;
+  --panel: #111114;
+  --line: rgba(255, 255, 255, 0.08);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; background: var(--bg); }
+body { background: var(--bg); color: #f0f0f0; overflow-x: hidden; }
+::selection { background: var(--f1-red); color: #fff; }
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #0c0c0e; }
+::-webkit-scrollbar-thumb { background: #2a2a30; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--f1-red); }
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+.text-gradient {
+  background: linear-gradient(90deg, #ff3b30, var(--f1-red) 45%, #ff7a59);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* Glass card */
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012));
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  backdrop-filter: blur(8px);
+}
+.card-hover { transition: border-color .3s, transform .3s, box-shadow .3s; }
+.card-hover:hover { border-color: rgba(255,255,255,0.18); }
+
+/* Subtle animated grid + noise background used by sections */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+
+@keyframes speedline { from { transform: translateX(-30vw); } to { transform: translateX(130vw); } }
+.speed-line { position: absolute; height: 1px; width: 22vw; left: 0; background: linear-gradient(90deg, transparent, var(--f1-red), transparent); animation: speedline 2.8s linear infinite; pointer-events: none; }
+
+@keyframes pulse-dot { 0% { box-shadow: 0 0 0 0 rgba(225,6,0,.7); } 70% { box-shadow: 0 0 0 8px rgba(225,6,0,0); } 100% { box-shadow: 0 0 0 0 rgba(225,6,0,0); } }
+.live-dot { width: 8px; height: 8px; border-radius: 9999px; background: var(--f1-red); animation: pulse-dot 1.6s infinite; }
+
+@keyframes shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+.shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent); background-size: 200% 100%; animation: shimmer 2.5s linear infinite; }
+
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.marquee { animation: marquee 40s linear infinite; }
+.marquee:hover { animation-play-state: paused; }
+
+.checker { background-image: conic-gradient(#fff 25%, #000 0 50%, #fff 0 75%, #000 0); background-size: 8px 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .speed-line, .marquee, .shimmer, .live-dot { animation: none !important; }
+  html { scroll-behavior: auto; }
+}
